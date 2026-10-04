@@ -4,12 +4,12 @@
   "description": "Real-time predictive maintenance for industrial motors and pumps: vibration order analysis, ultrasonic early bearing warning, and health scoring.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0d1117",
-  "theme_color": "#58a6ff",
+  "background_color": "#080b10",
+  "theme_color": "#080b10",
   "orientation": "any",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230d1117' width='100' height='100' rx='20'/><text y='.88em' font-size='62' x='16'>⚙️</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23080b10' width='100' height='100' rx='20'/><path fill='none' stroke='%23f2650a' stroke-width='7' stroke-linecap='round' stroke-linejoin='round' d='M14 52h13l9-26 13 50 9-26h28'/></svg>",
       "sizes": "any",
       "type": "image/svg+xml"
     }

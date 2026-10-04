@@ -28,7 +28,7 @@ the accelerometer.
 | Classifies healthy / imbalance / misalignment / looseness / bearing | **100% on 200 synthetic trials** (`results/results_mpu6050.txt`) |
 | Mic detects earlier than the accelerometer | **20% lead**, simulated — `results/` |
 | MPU6050 noise floor ≈ 3.1 milli-g vs ~20 milli-g healthy 1X | Modelled from datasheet |
-| **Any real hardware measurement** | ❌ **None yet.** No INMP441 has been bought. |
+| **Any real hardware measurement** | **None yet.** No INMP441 has been bought. |
 
 All numbers in `results/` come from a physics-based simulator, not from a
 physical machine. This is stated on the dashboard too. Do not overclaim it.

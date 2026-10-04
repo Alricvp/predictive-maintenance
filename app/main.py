@@ -306,6 +306,12 @@ async def serve_manifest():
                         media_type="application/json")
 
 
+@app.get("/sg-logo.png")
+async def serve_logo():
+    return FileResponse(os.path.join(HERE, "sg-logo.png"),
+                        media_type="image/png")
+
+
 @app.get("/health")
 async def health():
     return {"ok": True, "readings": len(sensor_data),

@@ -10,7 +10,7 @@
  *     app on a workshop tablet.
  */
 
-const CACHE = 'pdm-v1';
+const CACHE = 'pdm-v2';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -42,7 +42,7 @@ self.addEventListener('message', event => {
       body: event.data.body,
       tag: event.data.tag || 'pdm-alert',
       renotify: true,
-      icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230d1117' width='100' height='100' rx='20'/><text y='.9em' font-size='64' x='14'>⚙️</text></svg>",
+      icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23f2650a' width='100' height='100' rx='20'/><path fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round' d='M14 52h13l9-26 13 50 9-26h28'/></svg>",
       vibrate: event.data.vibrate || [300, 120, 300, 120, 300],
       requireInteraction: !!event.data.urgent
     });
