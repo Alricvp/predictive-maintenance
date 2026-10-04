@@ -75,10 +75,12 @@ The repo is host-agnostic: same GitHub repo, different button.
    - Runtime: **Docker** (Render detects the `Dockerfile`)
    - Branch: `main`   Root Directory: `/`
    - Instance Type: **Free**
-   - Service name: `sih-predictive-maintenance` — keep this exact name,
-     `.github/workflows/keepalive.yml` pings that URL.
+   - Service name: anything available (this one landed on
+     `predictive-maintenance-zflu`); `.github/workflows/keepalive.yml` pings
+     the live URL, so update that file if the service is ever renamed.
 3. **Create Web Service.** ~2–3 minutes of build, then a public URL of the
-   form `https://sih-predictive-maintenance.onrender.com`.
+   form `https://predictive-maintenance-zflu.onrender.com` (the exact URL
+   of this deployment).
 
 Two things that break PaaS deploys, both already handled in `main.py` and the
 Dockerfile:

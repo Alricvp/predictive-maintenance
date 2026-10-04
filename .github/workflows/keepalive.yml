@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Wake the dashboard
         run: |
-          URL="https://sih-predictive-maintenance.onrender.com/"
+          URL="https://predictive-maintenance-zflu.onrender.com/"
           # The first request triggers the cold start; if Render is still
           # booting, wait and retry once.
           code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 45 "$URL" || true)
