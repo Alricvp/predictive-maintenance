@@ -1,0 +1,20 @@
+# Runtime state - regenerated on every run, must not be committed
+app/data/
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Local env
+.env
+
+# Results ARE committed on purpose: they are the evidence behind the claims
+# in docs/. Do not add results/ to this file.

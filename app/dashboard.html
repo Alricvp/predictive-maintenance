@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>Predictive Maintenance — Machine Health Monitor</title>
+<link rel="manifest" href="/manifest.json">
+<style>
+  :root{
+    --bg:#080b10; --surface:#11161f; --surface2:#171d27; --edge:#252c38;
+    --edge2:#333b4a; --txt:#e8eef7; --dim:#7d8797; --dim2:#5b6474;
+    --ok:#2ea043; --warn:#d29922; --bad:#e5484d; --crit:#ff4d4f;
+    --acc:#4c8dff; --mic:#a371f7; --teal:#2dd4bf;
+    --shadow:0 2px 8px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.24);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom)}
+
+  /* ---- header ---- */
+  header{position:sticky;top:0;z-index:40;display:flex;align-items:center;
+    gap:14px;padding:10px 18px;background:rgba(8,11,16,.92);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--edge)}
+  .logo{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+    background:linear-gradient(135deg,#4c8dff,#a371f7);font-size:15px;flex:none}
+  .brand{font-weight:650;letter-spacing:-.2px;font-size:14.5px}
+  .brand small{display:block;font-weight:400;color:var(--dim2);font-size:11px;letter-spacing:0}
+  .spacer{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
+    border-radius:99px;font-size:11.5px;font-weight:550;border:1px solid var(--edge2);
+    color:var(--dim);background:var(--surface);white-space:nowrap}
+  .pill.sim{border-color:#4a3a1a;background:#241d0c;color:#e3b341}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--dim2);flex:none}
+  .dot.on{background:var(--ok);box-shadow:0 0 0 3px rgba(46,160,67,.16)}
+  .dot.off{background:var(--bad);box-shadow:0 0 0 3px rgba(229,72,77,.16)}
+  .dot.pulse{animation:pulse 1.4s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+
+  /* ---- layout ---- */
+  main{max-width:1500px;margin:0 auto;padding:16px 18px 40px;
+    display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}
+  .c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}
+  .c9{grid-column:span 9}.c12{grid-column:span 12}
+  @media(max-width:1100px){.c3,.c4,.c5{grid-column:span 6}
+    .c7,.c8,.c9{grid-column:span 12}}
+  @media(max-width:680px){main{grid-template-columns:1fr;padding:12px}
+    .c3,.c4,.c5,.c6,.c7,.c8,.c9,.c12{grid-column:span 1}}
+
+  .card{background:var(--surface);border:1px solid var(--edge);border-radius:12px;
+    padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .card>h2{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;
+    color:var(--dim2);font-weight:650;margin-bottom:13px;
+    display:flex;align-items:center;gap:7px}
+  .card>h2::after{content:"";flex:1;height:1px;background:var(--edge)}
+
+  /* ---- health gauge ---- */
+  .gauge{display:flex;align-items:center;gap:16px;margin-bottom:4px}
+  .ring{width:88px;height:88px;flex:none;position:relative}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .val{position:absolute;inset:0;display:grid;place-items:center;
+    font-size:26px;font-weight:700;font-family:var(--mono);letter-spacing:-1px}
+  .ring .cap{position:absolute;inset:auto 0 -18px 0;text-align:center;
+    font-size:9.5px;color:var(--dim2);text-transform:uppercase;letter-spacing:.9px}
+  .gmeta{flex:1;min-width:0}
+  .gstate{font-size:15px;font-weight:650;margin-bottom:5px}
+  .gsub{font-size:12px;color:var(--dim)}
+
+  /* ---- stats ---- */
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--edge);
+    border:1px solid var(--edge);border-radius:9px;overflow:hidden}
+  .stat{background:var(--surface2);padding:11px 12px}
+  .stat .k{font-size:10px;color:var(--dim2);text-transform:uppercase;letter-spacing:.7px}
+  .stat .v{font-family:var(--mono);font-size:16px;font-weight:600;margin-top:3px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stat .v.sm{font-size:13px}
+
+  /* ---- order bars ---- */
+  .orders{display:flex;flex-direction:column;gap:9px}
+  .orow{display:grid;grid-template-columns:62px 1fr 56px;align-items:center;gap:9px}
+  .oname{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .obar{height:15px;background:#0c1017;border-radius:4px;overflow:hidden;
+    position:relative;border:1px solid #1b212c}
+  .obar>i{display:block;height:100%;width:0;transition:width .4s cubic-bezier(.4,0,.2,1)}
+  .obar .thr{position:absolute;top:-1px;bottom:-1px;width:2px;
+    background:var(--dim2);opacity:.9}
+  .oval{font-family:var(--mono);font-size:11.5px;text-align:right;color:var(--dim)}
+  .oval.hot{color:var(--bad);font-weight:600}
+
+  /* ---- verdict ---- */
+  .verdict{border-radius:10px;padding:13px 15px;border:1px solid var(--edge2);
+    background:var(--surface2);border-left-width:4px}
+  .verdict.ok{border-left-color:var(--ok)}
+  .verdict.warn{border-left-color:var(--warn)}
+  .verdict.bad{border-left-color:var(--bad)}
+  .verdict.mic{border-left-color:var(--mic)}
+  .vt{font-size:15px;font-weight:700;letter-spacing:.3px;margin-bottom:4px}
+  .vb{font-size:12.5px;color:var(--dim);line-height:1.55}
+
+  /* ---- lead time ---- */
+  .lead{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;
+    margin-top:12px;padding-top:12px;border-top:1px solid var(--edge)}
+  .lbox{background:#0c1017;border:1px solid var(--edge);border-radius:9px;padding:10px 12px}
+  .lbox .k{font-size:9.5px;color:var(--dim2);text-transform:uppercase;letter-spacing:.7px}
+  .lbox .v{font-family:var(--mono);font-size:21px;font-weight:700;margin-top:2px}
+  .lbox.acc .v{color:var(--acc)} .lbox.mic .v{color:var(--mic)}
+  .larrow{font-size:17px;color:var(--dim2);text-align:center}
+
+  /* ---- waterfall ---- */
+  .wf{width:100%;height:132px;display:block;border-radius:7px;background:#070a0f;
+    border:1px solid var(--edge)}
+  .wf-cap{display:flex;justify-content:space-between;font-family:var(--mono);
+    font-size:10px;color:var(--dim2);margin-top:5px}
+
+  /* ---- controls ---- */
+  .toggles{display:flex;flex-direction:column;gap:7px}
+  .tog{display:flex;align-items:center;gap:10px;padding:9px 11px;cursor:pointer;
+    background:var(--surface2);border:1px solid var(--edge);border-radius:9px;
+    transition:.15s;user-select:none}
+  .tog:hover{border-color:var(--edge2);background:#1b222e}
+  .tog.on{border-color:var(--ok);background:#0e1f14}
+  .tog .ico{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
+    background:#0c1017;border:1px solid var(--edge);font-size:13px;flex:none}
+  .tog .tx{flex:1;min-width:0}
+  .tog .tt{font-size:12.5px;font-weight:550}
+  .tog .ts{font-size:10.5px;color:var(--dim2)}
+  .sw{width:34px;height:19px;border-radius:99px;background:#2a323f;position:relative;
+    flex:none;transition:.2s}
+  .sw i{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;
+    background:#8b95a5;transition:.2s}
+  .tog.on .sw{background:var(--ok)} .tog.on .sw i{left:17px;background:#fff}
+
+  /* ---- forms ---- */
+  input[type=text],input[type=tel]{width:100%;background:#0c1017;border:1px solid var(--edge2);
+    color:var(--txt);border-radius:8px;padding:8px 10px;font-size:12.5px;
+    font-family:var(--mono);outline:none}
+  input:focus{border-color:var(--acc)}
+  button{background:var(--acc);color:#fff;border:none;border-radius:8px;
+    padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+  button:hover{background:#3d7ee8} button:disabled{opacity:.5;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--edge2);color:var(--dim)}
+  button.ghost:hover{background:var(--surface2);color:var(--txt)}
+
+  /* ---- alerts ---- */
+  .alerts{max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+  .alert{display:flex;gap:10px;padding:10px 12px;border-radius:9px;
+    background:var(--surface2);border:1px solid var(--edge);border-left-width:3px;
+    animation:slide .3s}
+  @keyframes slide{from{opacity:0;transform:translateX(-8px)}}
+  .alert.bad{border-left-color:var(--bad)}
+  .alert.mic{border-left-color:var(--mic)}
+  .alert.ok{border-left-color:var(--ok)}
+  .alert .ai{font-size:15px;flex:none}
+  .alert .ab{flex:1;min-width:0}
+  .alert .at{font-size:12.5px;font-weight:650;margin-bottom:2px}
+  .alert .ad{font-size:11.5px;color:var(--dim);line-height:1.45}
+  .alert .am{font-family:var(--mono);font-size:10px;color:var(--dim2);margin-top:3px}
+
+  /* ---- devices ---- */
+  .devs{display:flex;flex-direction:column;gap:7px}
+  .dev{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;
+    background:var(--surface2);border:1px solid var(--edge);font-size:12px}
+  .dev .dn{font-family:var(--mono);font-weight:600}
+  .dev .dm{font-size:10.5px;color:var(--dim2)}
+
+  /* ---- overlay + alert bar ---- */
+  .alertbar{position:fixed;top:0;left:0;right:0;z-index:50;padding:11px 18px;
+    display:none;align-items:center;gap:12px;font-weight:700;font-size:13.5px;
+    letter-spacing:.3px}
+  .alertbar.show{display:flex;animation:drop .35s}
+  @keyframes drop{from{transform:translateY(-100%)}}
+  .alertbar.bad{background:linear-gradient(90deg,#3d1214,#6b1a1d);color:#ffd7d7;
+    border-bottom:1px solid #e5484d}
+  .alertbar.warn{background:linear-gradient(90deg,#3d2f10,#6b531a);color:#ffe9b8;
+    border-bottom:1px solid #d29922}
+  .alertbar.ok{background:linear-gradient(90deg,#0f2e17,#1a4a24);color:#c3f0cd;
+    border-bottom:1px solid #2ea043}
+  .alertbar .x{margin-left:auto;cursor:pointer;opacity:.7;font-size:17px}
+  .overlay{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:0;transition:.3s}
+  .overlay.bad{opacity:1;box-shadow:inset 0 0 130px rgba(229,72,77,.32)}
+  .overlay.warn{opacity:1;box-shadow:inset 0 0 110px rgba(210,153,34,.22)}
+  .shake{animation:shake .5s}
+  @keyframes shake{10%,90%{transform:translateX(-2px)}30%,70%{transform:translateX(3px)}}
+  .empty{color:var(--dim2);font-size:12.5px;text-align:center;padding:24px 0}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+<div class="alertbar" id="alertbar"><span id="alerttext"></span>
+  <span class="x" onclick="document.getElementById('alertbar').classList.remove('show')">&times;</span></div>
+
+<header>
+  <div class="logo">⚙️</div>
+  <div class="brand">Predictive Maintenance<small>Industrial Machine Health Monitor</small></div>
+  <div class="spacer"></div>
+  <span class="pill"><span class="dot" id="conn-dot"></span><span id="conn-label">connecting</span></span>
+  <span class="pill sim" id="datamode">SIMULATED</span>
+  <span class="pill" id="clientcount">—</span>
+</header>
+
+<main>
+
+  <!-- HEALTH -->
+  <div class="card c3">
+    <h2>Machine Health</h2>
+    <div class="gauge">
+      <div class="ring">
+        <svg width="88" height="88">
+          <circle cx="44" cy="44" r="38" stroke="#1c232e" stroke-width="8" fill="none"/>
+          <circle id="ring-fg" cx="44" cy="44" r="38" stroke="#2ea043" stroke-width="8"
+            fill="none" stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76"
+            style="transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1),stroke .4s"/>
+        </svg>
+        <div class="val" id="health">—</div>
+        <div class="cap">health</div>
+      </div>
+      <div class="gmeta">
+        <div class="gstate" id="gstate">WAITING</div>
+        <div class="gsub" id="gsub">No telemetry received</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIAGNOSTICS -->
+  <div class="card c5">
+    <h2>Diagnostics</h2>
+    <div class="stats">
+      <div class="stat"><div class="k">Shaft speed</div><div class="v" id="rpm">—</div></div>
+      <div class="stat"><div class="k">Vibration RMS</div><div class="v" id="rms">—</div></div>
+      <div class="stat"><div class="k">Kurtosis</div><div class="v" id="kurt">—</div></div>
+      <div class="stat"><div class="k">Bearing temp</div><div class="v" id="temp">—</div></div>
+      <div class="stat"><div class="k">Faults today</div><div class="v" id="nfault">0</div></div>
+      <div class="stat"><div class="k">Last update</div><div class="v sm" id="last">—</div></div>
+    </div>
+  </div>
+
+  <!-- DEVICES -->
+  <div class="card c4">
+    <h2>Monitored Assets</h2>
+    <div class="devs" id="devs"><div class="empty">No assets reporting</div></div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="card c8">
+    <h2>Diagnostic Verdict</h2>
+    <div class="verdict ok" id="verdict">
+      <div class="vt" id="vtitle">WAITING FOR DATA</div>
+      <div class="vb" id="vbody">Connect a sensor node or the simulator to begin.</div>
+    </div>
+    <div class="lead" id="lead" style="display:none">
+      <div class="lbox acc">
+        <div class="k">Accelerometer detected at</div>
+        <div class="v" id="accsev">—</div>
+      </div>
+      <div class="larrow">◀ EARLIER</div>
+      <div class="lbox mic">
+        <div class="k">Ultrasonic mic detected at</div>
+        <div class="v" id="micsev">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EARLY WARNING EXPLAINER -->
+  <div class="card c4">
+    <h2>Why Two Sensors</h2>
+    <div class="vb">
+      The accelerometer has a <b>500 Hz</b> sampling ceiling. An early bearing
+      spall rings the housing at <b>12–20 kHz</b> &mdash; entirely above it.
+      The microphone hears that band, so it detects the fault while the
+      accelerometer and the technician both still see nothing.
+    </div>
+  </div>
+
+  <!-- ORDER SPECTRUM -->
+  <div class="card c7">
+    <h2>Order Spectrum &mdash; dB Above Local Noise Floor</h2>
+    <div class="orders" id="orders"></div>
+    <div class="vb" style="margin-top:11px">
+      Each bar is a rotating-machine order measured against its own broadband
+      noise floor, so it is independent of load and mounting stiffness. The
+      grey tick is the alarm threshold learned from this machine's healthy
+      baseline &mdash; nothing here is a hardcoded constant.
+    </div>
+  </div>
+
+  <!-- WATERFALL -->
+  <div class="card c5">
+    <h2>Live Spectrum</h2>
+    <canvas class="wf" id="wf" width="600" height="264"></canvas>
+    <div class="wf-cap"><span>0 Hz</span><span id="wf-mid">125 Hz</span><span id="wf-max">250 Hz</span></div>
+  </div>
+
+  <!-- ALERTS -->
+  <div class="card c7">
+    <h2>Alert History</h2>
+    <div class="alerts" id="alerts"><div class="empty">No alerts recorded</div></div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card c5">
+    <h2>Alerts &amp; Notifications</h2>
+    <div class="toggles">
+      <div class="tog" id="t-siren" onclick="toggle('siren')">
+        <div class="ico">🔊</div>
+        <div class="tx"><div class="tt">Audible siren</div>
+          <div class="ts" id="s-siren">Off</div></div>
+        <div class="sw"><i></i></div>
+      </div>
+      <div class="tog" id="t-vib" onclick="toggle('vib')">
+        <div class="ico">📳</div>
+        <div class="tx"><div class="tt">Vibration</div>
+          <div class="ts" id="s-vib">Off</div></div>
+        <div class="sw"><i></i></div>
+      </div>
+      <div class="tog" id="t-push" onclick="toggle('push')">
+        <div class="ico">🔔</div>
+        <div class="tx"><div class="tt">Push notifications</div>
+          <div class="ts" id="s-push">Off</div></div>
+        <div class="sw"><i></i></div>
+      </div>
+      <div class="tog" id="t-sms" onclick="toggle('sms')">
+        <div class="ico">📱</div>
+        <div class="tx"><div class="tt">SMS to phone</div>
+          <div class="ts" id="s-sms">Off</div></div>
+        <div class="sw"><i></i></div>
+      </div>
+      <div class="tog" id="t-sound" onclick="toggle('sound')">
+        <div class="ico">🎵</div>
+        <div class="tx"><div class="tt">Alarm sound on every fault</div>
+          <div class="ts" id="s-sound">Off</div></div>
+        <div class="sw"><i></i></div>
+      </div>
+    </div>
+    <div style="margin-top:11px;display:flex;gap:7px">
+      <input type="tel" id="phone" placeholder="9876543210">
+      <button onclick="regPhone()">Register</button>
+    </div>
+    <div class="vb" style="margin-top:7px;font-size:11px">
+      SMS uses TextBelt's free tier: <b>1 message/day</b>. Fine for a demo,
+      not for production.
+    </div>
+  </div>
+
+  <!-- REFERENCE -->
+  <div class="card c12">
+    <h2>Fault Signature Reference</h2>
+    <div class="stats" style="grid-template-columns:repeat(5,1fr)">
+      <div class="stat"><div class="k">1X radial only</div><div class="v sm">Imbalance</div></div>
+      <div class="stat"><div class="k">Axial 1X + 2X</div><div class="v sm">Misalignment</div></div>
+      <div class="stat"><div class="k">3X / 4X series</div><div class="v sm">Looseness</div></div>
+      <div class="stat"><div class="k">Non-integer order</div><div class="v sm">Bearing fault</div></div>
+      <div class="stat"><div class="k">Order not covered</div><div class="v sm">Out of scope</div></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const ORDERS=[
+  ["1X","s1",45,"var(--acc)"],["2X","s2",14,"var(--acc)"],
+  ["3X","s3",14,"var(--acc)"],["4X","s4",14,"var(--acc)"],
+  ["axial 1X","axial_s1",40,"var(--acc)"],
+  ["BPFO","bpfo_db",18,"var(--mic)"],["BPFI","bpfi_db",18,"var(--mic)"],
+  ["MIC","mic_db",15,"var(--mic)"]];
+const MAXDB=70;
+const $=id=>document.getElementById(id);
+const state={siren:false,vib:false,push:false,sms:false,sound:false};
+let audioCtx=null,sirenOsc=null,vibInt=null,lastVerdict="healthy",lastData=0,faultCount=0;
+let ws=null,reconnectDelay=1000;
+const devices={};
+
+ORDERS.forEach(([label,key,thr,col])=>{
+  const r=document.createElement("div");r.className="orow";
+  r.innerHTML=`<span class="oname">${label}</span>
+   <div class="obar"><i id="b_${key}"></i><div class="thr" id="t_${key}"></div></div>
+   <span class="oval" id="v_${key}">—</span>`;
+  $("orders").appendChild(r);
+  $("t_"+key).style.left=(100*thr/MAXDB)+"%";
+});
+
+function barCol(db,thr){
+  if(db>=thr)return "var(--bad)";
+  if(db>=thr*.65)return "var(--warn)";
+  return "var(--ok)";}
+
+function drawSpectrum(d){
+  ORDERS.forEach(([l,key,thr])=>{
+    const v=d[key]||0;
+    $("b_"+key).style.width=Math.min(100,100*v/MAXDB)+"%";
+    $("b_"+key).style.background=barCol(v,thr);
+    const el=$("v_"+key);el.textContent=v.toFixed(1);
+    el.className="oval"+(v>=thr?" hot":"");});}
+
+/* ---- waterfall ---- */
+const wf=$("wf"),wctx=wf.getContext("2d");
+let hist=[];
+function pushSpec(sp){
+  if(!sp||!sp.length)return;
+  hist.push(sp);if(hist.length>70)hist.shift();drawWF();}
+function drawWF(){
+  const W=wf.width,H=wf.height;wctx.clearRect(0,0,W,H);
+  if(!hist.length)return;
+  const n=hist[0].length,rows=hist.length;
+  const colW=W/n;
+  for(let r=0;r<rows;r++){
+    const sp=hist[r],y=H-((r+1)/rows)*H;
+    const alpha=.25+.75*((r+1)/rows);
+    for(let c=0;c<n;c++){
+      const v=Math.min(1,(sp[c]||0)/60);
+      wctx.fillStyle=`hsla(${200-v*190},${70+v*25}%,${20+v*45}%,${alpha})`;
+      wctx.fillRect(c*colW,y,colW+1,H/rows+1);}}}
+
+/* ---- siren / vibration / push ---- */
+function initAudio(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==="suspended")audioCtx.resume();}
+function startSiren(){
+  initAudio();if(sirenOsc)return;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type="sawtooth";const t=audioCtx.currentTime;
+  o.frequency.setValueAtTime(760,t);
+  o.frequency.linearRampToValueAtTime(1180,t+.28);
+  o.frequency.linearRampToValueAtTime(620,t+.56);
+  g.gain.setValueAtTime(.5,t);
+  o.connect(g);g.connect(audioCtx.destination);o.start();
+  o.onended=()=>{sirenOsc=null;if(lastVerdict!=="healthy"&&state.siren)startSiren();};}
+function stopSiren(){if(sirenOsc){try{sirenOsc.stop();}catch(e){}sirenOsc=null;}}
+function buzz(){if(state.vib&&navigator.vibrate)navigator.vibrate([420,110,420,110,420]);}
+function beep(){
+  if(!state.sound)return;initAudio();
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type="square";o.frequency.value=880;
+  g.gain.setValueAtTime(.22,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+.22);
+  o.connect(g);g.connect(audioCtx.destination);o.start();
+  o.stop(audioCtx.currentTime+.24);}
+function notify(title,body,urgent){
+  if(!state.push)return;
+  if(navigator.serviceWorker&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage(
+      {type:"notify",title,body,urgent,tag:"pdm"});}
+  else if(window.Notification){
+    try{new Notification(title,{body,tag:"pdm",requireInteraction:!!urgent});}catch(e){}}}
+
+function toggle(k){
+  state[k]=!state[k];
+  $("t-"+k).classList.toggle("on",state[k]);
+  $("s-"+k).textContent=state[k]?"On":"Off";
+  if(k==="push"&&state[k])askNotify();
+  if(k==="siren"&&state[k]){initAudio();if(lastVerdict!=="healthy")startSiren();}
+  if(!state[k]){
+    if(k==="siren")stopSiren();
+    if(k==="vib"&&navigator.vibrate)navigator.vibrate(0);}
+  try{localStorage.setItem("pdm-"+k,state[k]?"1":"0");}catch(e){}}
+function askNotify(){
+  if(!("Notification"in window))return;
+  Notification.requestPermission().then(p=>{
+    $("s-push").textContent=p==="granted"?"On":"Blocked";});}
+function regPhone(){
+  const p=$("phone").value.trim();if(!p)return;
+  fetch("/api/sms/register",{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({phone:p})})
+   .then(()=>{$("s-sms").textContent="Registered";});}
+
+/* ---- alert handling ---- */
+const ICO={bearing:"🎯",imbalance:"⚖️",misalignment:"📐",looseness:"🔩",healthy:"✓"};
+function raiseAlert(a){
+  const cls=a.verdict==="bearing"?"mic":a.verdict==="healthy"?"ok":"bad";
+  $("overlay").className="overlay "+cls;
+  $("alertbar").className="alertbar show "+cls;
+  $("alerttext").textContent="⚠ "+a.title+" — "+a.advice;
+  document.body.classList.add("shake");
+  setTimeout(()=>document.body.classList.remove("shake"),520);
+  beep();buzz();
+  if(state.siren)startSiren();
+  notify(a.title,a.advice,a.verdict==="bearing");
+  if(a.verdict!=="healthy")faultCount++;
+  $("nfault").textContent=faultCount;
+
+  const el=document.createElement("div");el.className="alert "+cls;
+  el.innerHTML=`<div class="ai">${ICO[a.verdict]||"⚠"}</div>
+   <div class="ab"><div class="at">${a.title}</div>
+   <div class="ad">${a.advice}</div>
+   <div class="am">${new Date(a.timestamp).toLocaleString()}</div></div>`;
+  const list=$("alerts");
+  if(list.firstChild&&list.firstChild.className==="empty")list.innerHTML="";
+  list.insertBefore(el,list.firstChild);
+  while(list.children.length>60)list.removeChild(list.lastChild);
+}
+function clearAlert(){
+  $("overlay").className="overlay";
+  $("alertbar").classList.remove("show");
+  stopSiren();}
+
+/* ---- render ---- */
+const VERD={
+ healthy:["ok","HEALTHY","All orders sit within this machine's calibrated baseline."],
+ imbalance:["bad","IMBALANCE","Radial 1X elevated with harmonics quiet. Check blade fouling or a bent impeller; re-balance after repair."],
+ misalignment:["bad","MISALIGNMENT","Axial 1X and 2X elevated together. Re-align the shafts and check for soft foot and pipe strain."],
+ looseness:["bad","LOOSENESS","Harmonic series (3X, 4X) elevated — the structure is re-exciting each impact. Re-torque the base bolts."],
+ bearing:["mic","BEARING FAULT","A non-integer fault order is present in the resonance envelope. Replace the bearing this shift."]};
+
+function render(d){
+  drawSpectrum(d);
+  const h=d.health??0;
+  $("health").textContent=h;
+  const ring=$("ring-fg");
+  ring.style.strokeDashoffset=238.76*(1-h/100);
+  ring.style.stroke=h>=75?"#2ea043":h>=45?"#d29922":"#e5484d";
+  const V=VERD[d.verdict]||VERD.healthy;
+  $("gstate").textContent=V[1];
+  $("gstate").style.color=h>=75?"#2ea043":h>=45?"#d29922":"#e5484d";
+  $("gsub").textContent=h>=75?"Running within limits":h>=45?"Degradation detected":"Action required now";
+  $("verdict").className="verdict "+V[0];
+  $("vtitle").textContent=V[1];$("vbody").textContent=V[2];
+
+  $("rpm").textContent=(d.rpm||0).toFixed(0)+" RPM";
+  $("rms").textContent=(d.rms_g||0).toFixed(4)+" g";
+  $("kurt").textContent=(d.kurtosis||0).toFixed(2);
+  $("temp").textContent=d.temp_c!=null?d.temp_c.toFixed(1)+" °C":"—";
+  $("last").textContent=new Date(d.timestamp).toLocaleTimeString();
+
+  if(d.mic_severity!=null&&d.acc_severity!=null&&d.mic_severity<d.acc_severity){
+    $("lead").style.display="grid";
+    $("micsev").textContent=d.mic_severity.toFixed(2);
+    $("accsev").textContent=d.acc_severity.toFixed(2);}
+
+  devices[d.device_id||"unknown"]={n:d.device_id||"unknown",
+    v:(d.verdict||""),h:h,t:new Date(d.timestamp).toLocaleTimeString()};
+  drawDevs();
+  pushSpec(d.spectrum);
+  lastData=Date.now();
+  if(d.verdict==="healthy"){lastVerdict="healthy";clearAlert();}
+  else lastVerdict=d.verdict;
+}
+function drawDevs(){
+  const keys=Object.keys(devices);
+  const el=$("devs");
+  if(!keys.length){el.innerHTML='<div class="empty">No assets reporting</div>';return;}
+  el.innerHTML=keys.map(k=>{const d=devices[k];
+    const c=d.h>=75?"#2ea043":d.h>=45?"#d29922":"#e5484d";
+    return `<div class="dev"><span class="dot on"></span>
+      <div><div class="dn">${d.n}</div><div class="dm">${d.v} · ${d.h}/100</div></div>
+      <div style="margin-left:auto;font-family:var(--mono);font-size:11px;color:${c}">${d.h}</div></div>`;}).join("");}
+
+/* ---- websocket ---- */
+function connect(){
+  const proto=location.protocol==="https:"?"wss":"ws";
+  ws=new WebSocket(`${proto}://${location.host}/ws`);
+  ws.onopen=()=>{reconnectDelay=1000;
+    $("conn-dot").className="dot on";$("conn-label").textContent="live";};
+  ws.onclose=()=>{
+    $("conn-dot").className="dot off pulse";$("conn-label").textContent="reconnecting";
+    setTimeout(connect,reconnectDelay);reconnectDelay=Math.min(10000,reconnectDelay*1.5);};
+  ws.onmessage=ev=>{const m=JSON.parse(ev.data);
+    if(m.type==="sensor")render(m.data);
+    else if(m.type==="alert")raiseAlert(m.data);};
+}
+function boot(){
+  ["siren","vib","push","sms","sound"].forEach(k=>{
+    try{state[k]=localStorage.getItem("pdm-"+k)==="1";}catch(e){}
+    $("t-"+k).classList.toggle("on",state[k]);
+    $("s-"+k).textContent=state[k]?"On":"Off";});
+  if(state.push&&"Notification"in window&&Notification.permission==="granted")
+    $("s-push").textContent="On";
+  if("serviceWorker"in navigator)
+    navigator.serviceWorker.register("/sw.js").catch(()=>{});
+  connect();
+  setInterval(()=>{
+    $("clientcount").textContent="—";},1000);
+  fetch("/api/alerts").then(r=>r.json()).then(j=>{
+    const a=$("alerts");a.innerHTML="";
+    if(!j.data||!j.data.length){a.innerHTML='<div class="empty">No alerts recorded</div>';return;}
+    j.data.slice().reverse().forEach(x=>{
+      const cls=x.verdict==="bearing"?"mic":x.verdict==="healthy"?"ok":"bad";
+      a.insertAdjacentHTML("beforeend",
+        `<div class="alert ${cls}"><div class="ai">${ICO[x.verdict]||"⚠"}</div>
+         <div class="ab"><div class="at">${x.title}</div><div class="ad">${x.advice}</div>
+         <div class="am">${new Date(x.timestamp).toLocaleString()}</div></div></div>`);});});
+}
+boot();
+</script>
+</body>
+</html>

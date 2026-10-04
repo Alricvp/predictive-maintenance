@@ -1,0 +1,14 @@
+# Keep the container image minimal - Koyeb's free Instance is 512 MB RAM /
+# 0.1 vCPU and only app/ is actually served.
+app/data/
+__pycache__/
+*.py[cod]
+.git/
+.gitignore
+docs/
+results/
+tools/
+firmware/
+*.md
+*.txt
+.env

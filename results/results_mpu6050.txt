@@ -1,0 +1,147 @@
+Healthy baseline from 60 trials (Rs250-class sensor, calibrated):
+  bearing-order SNR : mean   10.8 dB, sd   1.1 dB -> alarm at   17.4 dB
+  1X amplitude      : mean 0.0207 g, sd 0.0097 g -> alarm at 0.0500 g
+  mic order SNR     : mean    7.6 dB, sd   1.2 dB -> alarm at   14.7 dB
+  calibrated order alarms (99.5th pct of healthy + 3 dB):
+    s1        ->   61.9 dB
+    s2        ->   13.4 dB
+    s3        ->   13.2 dB
+    s4        ->   13.5 dB
+    axial_s1  ->   48.9 dB
+  noise floor       : 0.0031 g RMS broadband (140 ug/sqrt(Hz) x sqrt(fs/2))
+==========================================================================
+EXP 1  Fault separation at severity 0.60, 40 trials per class
+==========================================================================
+
+6205 bearing geometry at 1500 RPM (1X = 25.0 Hz):
+  BPFO (outer race) =   89.3 Hz   (3.57X)
+  BPFI (inner race) =  135.7 Hz   (5.43X)
+  BSF  (ball spin)  =   58.0 Hz   (2.32X)
+  FTF  (cage)       =    9.9 Hz   (0.40X)
+
+  -> Every fault order sits BELOW 136 Hz. The accelerometer's
+     500 Hz Nyquist is not the constraint people assume.
+     The real constraint is the 12000-19000 Hz resonance ABOVE it.
+
+true\pred    healthy      imbalance    misalignment looseness    bearing      
+------------------------------------------------------------------------------
+healthy      40           0            0            0            0            
+imbalance    0            40           0            0            0            
+misalignment 0            0            40           0            0            
+looseness    0            0            0            40           0            
+bearing      0            0            0            0            40           
+
+ACCURACY: 100.0%  (200 / 200)
+
+Mean feature values by class - every order as dB above local floor:
+class              1X      2X      3X      4X     ax1X   brg_dB     kurt
+--------------------------------------------------------------------------
+healthy          44.1     6.6     7.1     7.4     32.0     10.9     1.76
+imbalance        74.6     6.6     7.1     7.6     44.9     10.4     1.64
+misalignment     43.9    68.4     7.1     7.5     72.2     10.6     1.57
+looseness        64.9    64.4    63.1    60.6     63.6     10.2     3.39
+bearing          22.4    -7.0    -6.1    -6.5     11.2     23.5     4.35
+
+Calibrated alarms: s1>=62dB, s2>=13dB, s3>=13dB, s4>=13dB, axial_s1>=49dB
+                  bearing_idx>=17dB, mic_idx>=15dB
+
+==========================================================================
+EXP 3  Detection limit - lowest severity each class is identified
+==========================================================================
+
+class            min severity       detected  trial acc
+----------------------------------------------------------
+imbalance                0.14            yes       100%
+misalignment             0.06            yes       100%
+looseness                0.02            yes       100%
+bearing                  0.02            yes       100%
+
+Interpretation:
+  'min severity' is the first level where >=80%% of trials are
+  classified correctly and it stays correct as severity rises.
+    imbalance     identifiable from 14% of the way to failure
+    misalignment  identifiable from 6% of the way to failure
+    looseness     identifiable from 2% of the way to failure
+    bearing       identifiable from 2% of the way to failure
+
+==========================================================================
+EXP 2  Staged bearing degradation - when does each detector fire?
+==========================================================================
+
+Bearing order tracked: BPFO = 89.3 Hz, BPFI = 135.7 Hz
+Accelerometer resonance band : 180-480 Hz (below its 500 Hz Nyquist)
+Mic resonance band           : 12000-19000 Hz (invisible to the accelerometer)
+
+severity    RMS (g)     dRMS %  acc brg_idx  MIC brg_idx
+----------------------------------------------------------
+0.00         0.0094          -         23.8          7.4
+0.05         0.0151          -         24.7          8.6
+0.10         0.0157          -         24.8         15.7
+0.15         0.0180          -         25.0         16.6
+0.20         0.0129          -         25.5         16.4
+0.25         0.0174          -         26.0         16.0
+0.30         0.0208          -         25.5         16.7
+0.35         0.0195          -         25.9         16.7
+0.40         0.0233          -         25.6         16.0
+0.45         0.0250          -         25.9         16.4
+0.50         0.0269          -         23.9         18.7
+0.55         0.0262          -         24.0         18.1
+0.60         0.0299          -         23.6         18.1
+0.65         0.0334          -         21.8         18.4
+0.70         0.0331          -         23.0         18.5
+0.75         0.0323          -         23.5         18.8
+0.80         0.0354          -         23.3         18.7
+0.85         0.0387          -         23.6         18.5
+0.90         0.0397          -         23.8         19.1
+0.95         0.0414          -         23.4         19.0
+1.00         0.0428          -         23.3         18.4
+
+  RMS as a fraction of healthy baseline (this is what a human feels):
+    severity 0.00 -> RMS +0.0% vs baseline
+    severity 0.05 -> RMS +60.3% vs baseline
+    severity 0.10 -> RMS +65.9% vs baseline
+    severity 0.15 -> RMS +90.5% vs baseline
+    severity 0.20 -> RMS +36.6% vs baseline
+    severity 0.25 -> RMS +84.8% vs baseline
+    severity 0.30 -> RMS +120.2% vs baseline
+    severity 0.35 -> RMS +106.6% vs baseline
+    severity 0.40 -> RMS +146.9% vs baseline
+    severity 0.45 -> RMS +165.3% vs baseline
+    severity 0.50 -> RMS +184.6% vs baseline
+    severity 0.55 -> RMS +178.0% vs baseline
+    severity 0.60 -> RMS +217.3% vs baseline
+    severity 0.65 -> RMS +254.4% vs baseline
+    severity 0.70 -> RMS +250.6% vs baseline
+    severity 0.75 -> RMS +242.7% vs baseline
+    severity 0.80 -> RMS +275.7% vs baseline
+    severity 0.85 -> RMS +309.7% vs baseline
+    severity 0.90 -> RMS +320.9% vs baseline
+    severity 0.95 -> RMS +338.5% vs baseline
+    severity 1.00 -> RMS +353.8% vs baseline
+
+--------------------------------------------------------------------------
+FIRST DETECTION
+  RMS threshold        = 2.0x healthy baseline = 0.0189 g
+  Accelerometer alarm  = 17.4 dB (calibrated, healthy mean + 6 sigma)
+  Mic alarm            = 14.7 dB (calibrated, healthy mean + 6 sigma)
+--------------------------------------------------------------------------
+  Accelerometer RMS (naive / human)  : severity 0.30
+  Accelerometer envelope order      : severity 0.00
+  Ultrasonic mic envelope order     : severity 0.10
+
+  LEAD TIME of the Rs250-class ultrasonic mic over RMS: 20% of the
+  degradation path detected BEFORE the machine's vibration
+  had grown by even half.
+
+  The accelerometer, even at its very best, detects the bearing
+  order only at severity 0.00 - and only because we forced it into
+  the 180-480 Hz band it can barely see. The mic gets it at 0.10.
+
+==========================================================================
+SUMMARY
+==========================================================================
+  Sensor profile                : mpu6050 (1000 Hz ODR, 500 Hz Nyquist)
+  Fault-class separation accuracy : 100.0%
+  Ultrasonic detection severity   : 0.10
+  Naive RMS detection severity    : 0.30
+  Lead time (mic over RMS)        : 20% of the degradation path

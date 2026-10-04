@@ -1,0 +1,9 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+websockets==12.0
+pydantic>=2.0,<3.0
+
+# Only needed to run live_sim.py (the simulated data feeder), NOT by the
+# server itself. Uncomment if you want the deployed service to also generate
+# demo traffic.
+# numpy>=1.24
