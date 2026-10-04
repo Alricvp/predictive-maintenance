@@ -310,6 +310,13 @@ async def serve_manifest():
                         media_type="application/json")
 
 
+@app.get("/favicon.ico")
+async def serve_favicon():
+    # Browsers probe /favicon.ico even when a link icon is declared.
+    return FileResponse(os.path.join(HERE, "favicon.png"),
+                        media_type="image/png")
+
+
 @app.get("/sg-logo.png")
 async def serve_logo():
     return FileResponse(os.path.join(HERE, "sg-logo.png"),

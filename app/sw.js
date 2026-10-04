@@ -10,7 +10,7 @@
  *     app on a workshop tablet.
  */
 
-const CACHE = 'pdm-v3';
+const CACHE = 'pdm-v4';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
