@@ -694,6 +694,7 @@ function boot(){
   let settled=false;
   const showFallback=()=>{
     if(settled)return;
+    settled=true;
     intro.classList.add("novideo","stage2");
     setTimeout(close,3400);};
   const vid=$("introvid");
@@ -703,8 +704,14 @@ function boot(){
     const src=vid.querySelector("source");
     if(src)src.addEventListener("error",showFallback);
     const p=vid.play&&vid.play();
-    if(p&&p.catch)p.catch(()=>{setTimeout(close,2600);});
-    setTimeout(()=>{if(!settled){settled=true;close();}},10000);
+    if(p&&p.catch)p.catch(()=>{showFallback();});
+    // Readiness watchdog: some failures never fire an error event (e.g. a
+    // 404 during source selection). If the video has not reached frame 1
+    // and is not even loading, reveal the brand fallback.
+    setTimeout(()=>{if(!settled&&vid.readyState<2&&vid.networkState!==2)
+      showFallback();},3500);
+    // Absolute backstop: never trap the visitor behind a broken intro.
+    setTimeout(()=>{if(!settled)showFallback();},10000);
   } else showFallback();
   $("introskip").addEventListener("click",e=>{e.stopPropagation();settled=true;close();});
   intro.addEventListener("click",()=>{settled=true;close();});
