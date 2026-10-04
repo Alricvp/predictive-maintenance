@@ -196,10 +196,13 @@
   @keyframes shake{10%,90%{transform:translateX(-2px)}30%,70%{transform:translateX(3px)}}
   .empty{color:var(--dim2);font-size:12.5px;text-align:center;padding:24px 0}
 /* ---- intro sequence (mirrors the SCAPEGOATS team intro video) ---- */
-.intro{position:fixed;inset:0;z-index:100;background:#0a0d12;cursor:pointer;
+.intro{position:fixed;inset:0;z-index:100;background:#000;cursor:pointer;
   display:grid;place-items:center;overflow:hidden;
   transition:opacity .55s ease,visibility .55s}
 .intro.stage2{background:#f7f7f8}
+.intro-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  background:#000;display:block}
+.intro.novideo .intro-video{display:none}
 .intro.gone{opacity:0;visibility:hidden;pointer-events:none}
 .intro-core{position:relative;display:flex;flex-direction:column;align-items:center;
   text-align:center;padding:22px;max-width:92vw;
@@ -255,6 +258,10 @@ footer .fd{text-transform:none;letter-spacing:.02em;font-size:11px}
 <body>
 
 <div class="intro" id="intro">
+  <video class="intro-video" id="introvid" playsinline muted autoplay preload="auto"
+         poster="/media/poster.jpg">
+    <source src="/media/intro.mp4" type="video/mp4">
+  </video>
   <div class="intro-flare"></div>
   <div class="intro-core">
     <img class="intro-logo" src="/sg-logo.png" alt="SCAPEGOATS">
@@ -416,10 +423,6 @@ footer .fd{text-transform:none;letter-spacing:.02em;font-size:11px}
       <input type="tel" id="phone" placeholder="9876543210">
       <button onclick="regPhone()">Register</button>
     </div>
-    <div class="vb" style="margin-top:7px;font-size:11px">
-      SMS uses TextBelt's free tier: <b>1 message/day</b>. Fine for a demo,
-      not for production.
-    </div>
   </div>
 
   <!-- REFERENCE -->
@@ -439,7 +442,7 @@ footer .fd{text-transform:none;letter-spacing:.02em;font-size:11px}
 <footer>
   <span class="fg">SCAPEGOATS</span>
   <span>CODE &middot; SOLVE &middot; IMPACT</span>
-  <span class="fd">SIH 2026 hackathon build &mdash; all telemetry on this demo is simulated</span>
+  <span class="fd">All telemetry on this demo is simulated</span>
 </footer>
 
 <script>
@@ -678,7 +681,8 @@ function boot(){
          <div class="ab"><div class="at">${x.title}</div><div class="ad">${x.advice}</div>
          <div class="am">${new Date(x.timestamp).toLocaleString()}</div></div></div>`);});});
 }
-/* ---- intro: dark storm phase -> brand reveal -> dashboard ---- */
+/* ---- intro: the team video, then the dashboard.
+   If the video cannot play, fall back to the CSS brand reveal. ---- */
 (function(){
   const intro=$("intro");if(!intro)return;
   if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){
@@ -687,11 +691,24 @@ function boot(){
     if(!document.body.contains(intro))return;
     intro.classList.add("gone");
     setTimeout(()=>{if(intro.parentNode)intro.remove();},700);};
-  setTimeout(()=>intro.classList.add("stage2"),600);
-  setTimeout(close,3400);
-  $("introskip").addEventListener("click",e=>{e.stopPropagation();close();});
-  intro.addEventListener("click",close);
-  window.addEventListener("keydown",close,{once:true});
+  let settled=false;
+  const showFallback=()=>{
+    if(settled)return;
+    intro.classList.add("novideo","stage2");
+    setTimeout(close,3400);};
+  const vid=$("introvid");
+  if(vid){
+    vid.addEventListener("ended",()=>{if(settled)return;settled=true;close();});
+    vid.addEventListener("error",showFallback);
+    const src=vid.querySelector("source");
+    if(src)src.addEventListener("error",showFallback);
+    const p=vid.play&&vid.play();
+    if(p&&p.catch)p.catch(()=>{setTimeout(close,2600);});
+    setTimeout(()=>{if(!settled){settled=true;close();}},10000);
+  } else showFallback();
+  $("introskip").addEventListener("click",e=>{e.stopPropagation();settled=true;close();});
+  intro.addEventListener("click",()=>{settled=true;close();});
+  window.addEventListener("keydown",()=>{settled=true;close();},{once:true});
 })();
 boot();
 </script>

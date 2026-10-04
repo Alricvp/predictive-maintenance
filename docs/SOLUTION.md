@@ -1,6 +1,6 @@
 # Predictive Maintenance — Engineering Solution
 
-**Problem statement (SIH 2026):** Real-Time Predictive Maintenance System for Industrial
+**Problem statement:** Real-Time Predictive Maintenance System for Industrial
 Machines — a sensor device on motors/pumps/compressors measuring temperature, vibration,
 pressure and current, streaming to a live web dashboard, moving industry from reactive
 ("repair after failure") to predictive ("detect before failure").

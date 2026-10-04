@@ -1,6 +1,6 @@
 # Predictive Maintenance — Real-Time Machine Condition Monitor
 
-**SIH 2026 · Track: Wildcard — Beyond the Obvious · Team SCAPEGOATS**
+**Team SCAPEGOATS**
 
 Moves industrial maintenance from reactive (*"repair after the breakdown"*) to
 predictive (*"detect the problem before failure"*) — using an MPU6050 and a MEMS
@@ -113,7 +113,6 @@ scheduled workflows off after 60 days without repo activity.
 - **The firmware has never been compiled.** No Arduino toolchain was available
   when it was written. `ACCEL_CONFIG2` **must** be `0x00`; setting bit 1 caps
   the accelerometer at 333 Hz and silently rescales every frequency.
-- **SMS is 1 message/day** on TextBelt's free key.
 - **Only a 6205 at 1500 RPM** is modelled. Not 1440 RPM, not under varying load,
   not another bearing type.
 - **The ultrasonic channel is synthesised.** No microphone is wired up.

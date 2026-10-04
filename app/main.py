@@ -23,6 +23,7 @@ from datetime import datetime
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -292,6 +293,9 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         if websocket in connected_clients:
             connected_clients.remove(websocket)
+
+
+app.mount("/media", StaticFiles(directory=HERE), name="media")
 
 
 @app.get("/sw.js")
