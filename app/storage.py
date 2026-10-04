@@ -13,7 +13,7 @@ happen and reloaded at startup.
 
 HONEST LIMITATION
 -----------------
-Koyeb's free Instance has EPHEMERAL local disk. This survives a process
+The free PaaS instance (Render) has EPHEMERAL local disk. This survives a process
 restart, but NOT the recreation of the instance itself. So it is a big
 improvement, not a guarantee. Anything that must survive permanently needs a
 real database - out of scope for a hackathon prototype, but do not claim

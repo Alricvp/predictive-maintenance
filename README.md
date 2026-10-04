@@ -41,7 +41,7 @@ firmware/     ESP32 + MPU6050 firmware, and the bench analysis harness
 tools/        Fault simulator (sim_faults.py) and the demo data feeder
 results/      Committed simulator output backing every number above
 docs/         Full engineering solution + novelty audit
-Dockerfile    Pinned build for Koyeb
+Dockerfile    Pinned build for Render
 ```
 
 `app/` is self-contained and has no dependency on any other project.
@@ -63,27 +63,38 @@ The simulator injects a scripted fault timeline: healthy → imbalance → healt
 looseness → healthy → a bearing fault that develops over 90 s. Use
 `--speedup 6` to play it faster.
 
-## Deploy to Koyeb (free)
+## Deploy to Render (free)
 
-1. Push this repo to its own GitHub repository.
-2. Koyeb Dashboard → **Create → Web Service** → connect the repo.
-3. Koyeb detects the `Dockerfile`. Settings:
-   - Region: **Frankfurt or Washington DC** (the only ones on the free tier)
-   - Instance: **Free** (512 MB, 0.1 vCPU)
-4. Deploy. You get a public HTTPS URL.
+Koyeb — the original target — removed its free Starter plan for new accounts
+after joining Mistral AI (Feb 2026); new signups must take the $29/mo plan.
+The repo is host-agnostic: same GitHub repo, different button.
 
-Two things that break PaaS deploys, both already handled in `main.py`:
+1. dashboard.render.com → sign in with GitHub → **New + → Web Service** →
+   connect this repository (grant Render access to it if asked).
+2. Settings:
+   - Runtime: **Docker** (Render detects the `Dockerfile`)
+   - Branch: `main`   Root Directory: `/`
+   - Instance Type: **Free**
+   - Service name: `sih-predictive-maintenance` — keep this exact name,
+     `.github/workflows/keepalive.yml` pings that URL.
+3. **Create Web Service.** ~2–3 minutes of build, then a public URL of the
+   form `https://sih-predictive-maintenance.onrender.com`.
+
+Two things that break PaaS deploys, both already handled in `main.py` and the
+Dockerfile:
 
 - **Bind address must be `0.0.0.0`.** Binding `127.0.0.1` inside a container
   makes every external request fail with connection refused.
-- **Port must come from `$PORT`,** not a hardcoded 8000.
+- **Port comes from `$PORT`** — Render's default is 10000, and the Dockerfile
+  binds the same value as its fallback.
 
-### Why Koyeb rather than Render
+### Keeping the link awake during judging
 
-Render's free web services spin down after **15 minutes** of inactivity with a
-30–60 second cold start. Koyeb's free Instance scales to zero after **1 hour**,
-so a link opened during judging is far less likely to show a loading page. It
-also usually needs no credit card.
+Render's free instance sleeps after **15 minutes** without traffic (cold start
+30–60 s). `.github/workflows/keepalive.yml` pings the URL every 5 minutes from
+GitHub Actions — free while the repo is public — so the demo link opens warm.
+If you rename the service, update the URL inside that file. GitHub switches
+scheduled workflows off after 60 days without repo activity.
 
 ## Known limitations — read these before demoing
 
@@ -92,10 +103,11 @@ also usually needs no credit card.
   loses all credibility. Present the simulator as the system running on
   synthetic data, and the one real-hardware measurement as the proof of the
   core claim.
-- **The free Instance sleeps.** Alerts and device state are written to disk
-  (`app/data/`) so they survive a *process* restart, but Koyeb's local disk is
-  **ephemeral** — an instance recreation loses them. Persistence is a big
-  improvement, not a guarantee.
+- **The free instance sleeps, and its disk is temporary.** Alerts and device
+  state are written to disk (`app/data/`) so they survive a process restart
+  or a cold start, but Render's free-tier disk is **ephemeral** — a re-deploy
+  or service recreation loses it. Persistence is a big improvement, not a
+  guarantee.
 - **The firmware has never been compiled.** No Arduino toolchain was available
   when it was written. `ACCEL_CONFIG2` **must** be `0x00`; setting bit 1 caps
   the accelerometer at 333 Hz and silently rescales every frequency.

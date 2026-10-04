@@ -11,7 +11,7 @@ classifies the fault, and pushes live updates to any number of browsers over
 WebSocket. Alert history and device state persist to disk so evidence survives
 a scale-to-zero restart.
 
-Deployment note (Koyeb and most PaaS): the port comes from the PORT env var and
+Deployment note (Render and most PaaS): the port comes from the PORT env var and
 the bind address MUST be 0.0.0.0. Binding 127.0.0.1 inside a container makes
 every external request fail with connection refused.
 """

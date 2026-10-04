@@ -1,5 +1,5 @@
-# Keep the container image minimal - Koyeb's free Instance is 512 MB RAM /
-# 0.1 vCPU and only app/ is actually served.
+# Keep the container image minimal - Render's free instance is 512 MB RAM /
+# shared CPU and only app/ is actually served.
 app/data/
 __pycache__/
 *.py[cod]
