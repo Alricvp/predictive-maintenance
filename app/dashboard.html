@@ -603,9 +603,12 @@ function render(d){
   ring.style.strokeDashoffset=238.76*(1-h/100);
   ring.style.stroke=h>=75?"#2ea043":h>=45?"#d29922":"#e5484d";
   const V=VERD[d.verdict]||VERD.healthy;
+  const isFault=d.verdict&&d.verdict!=="healthy";
   $("gstate").textContent=V[1];
-  $("gstate").style.color=h>=75?"#2ea043":h>=45?"#d29922":"#e5484d";
-  $("gsub").textContent=h>=75?"Running within limits":h>=45?"Degradation detected":"Action required now";
+  $("gstate").style.color=isFault?(V[0]==="mic"?"#a371f7":"#e5484d")
+    :(h>=75?"#2ea043":h>=45?"#d29922":"#e5484d");
+  $("gsub").textContent=isFault?"Fault active — see diagnostic verdict below"
+    :(h>=75?"Running within limits":h>=45?"Degradation detected":"Action required now");
   $("verdict").className="verdict "+V[0];
   $("vtitle").textContent=V[1];$("vbody").textContent=V[2];
 
